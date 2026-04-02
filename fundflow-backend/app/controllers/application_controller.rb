@@ -10,8 +10,11 @@ class ApplicationController < ActionController::API
     token = header.split(' ').last if header
     decoded = JsonWebToken.decode(token) if token
 
-    if decoded
+    begin
+      decoded = JsonWebToken.decode(token)
       @current_user = User.find_by(id: decoded[:user_id])
+    rescue JWT::DecodeError, JWT::ExpiredSignature
+      @current_user = nil
     end
 
     render json: { error: 'Unauthorized' }, status: :unauthorized unless @current_user
